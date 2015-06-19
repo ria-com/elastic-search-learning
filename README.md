@@ -1,5 +1,7 @@
 # Небольшой курс лекций по Elastic Search
 
+[План лекций](https://docs.google.com/a/ria.com/document/d/1elQ5KLu-8UyaRsdJfhIN_BuxjQrMHgW5kVVU7xDw4TQ/edit?usp=sharing)
+
 ## Установка и настройка
 
 Для ОС Fedora есть свой репозиторий. Для того, чтобы установить себе Elastic Search версии 1.4, необходимо добавить в файл `/etc/yum.repos.d/` следующие настройки:
