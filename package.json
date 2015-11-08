@@ -1,0 +1,24 @@
+{
+  "name": "elastic-search-learning",
+  "version": "1.0.0",
+  "description": "[План лекций](https://docs.google.com/a/ria.com/document/d/1elQ5KLu-8UyaRsdJfhIN_BuxjQrMHgW5kVVU7xDw4TQ/edit?usp=sharing)",
+  "main": "index.js",
+  "dependencies": {
+    "request": "^2.65.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-base": "node scripts/generate_base.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ria-com/elastic-search-learning.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ria-com/elastic-search-learning/issues"
+  },
+  "homepage": "https://github.com/ria-com/elastic-search-learning#readme"
+}
