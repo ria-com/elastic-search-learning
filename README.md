@@ -298,29 +298,35 @@ PUT /my_index
 ```bash
 PUT /my_index
 {
-    "settings": {
-        "analysis": {
-            "filter": {
-                "synonym": {
-                    "type":       "synonym",
-                    "synonyms": [
-                         "беха, бумер => bmw",
-                         "mercedes => mercedes-benz"
-                    ]
-                },
-                "metaphone" : {
-                    "type" : "phonetic",
-                    "encoder" : "metaphone",
-                    "replace" : false
-                }
+   "settings": {
+      "analysis": {
+         "filter": {
+            "synonym": {
+               "type": "synonym",
+               "synonyms": [
+                  "беха, бумер => bmw",
+                  "mercedes => mercedes-benz"
+               ]
             },
-            "analyzer": {
-                "mark_and_model": {
-                    "type":         "custom",
-                    "tokenizer":    "whitespace",
-                    "filter":       ["synonym", "metaphone" ]
-            }}
-}}}
+            "metaphone": {
+               "type": "phonetic",
+               "encoder": "metaphone",
+               "replace": false
+            }
+         },
+         "analyzer": {
+            "mark_and_model": {
+               "type": "custom",
+               "tokenizer": "whitespace",
+               "filter": [
+                  "synonym",
+                  "metaphone"
+               ]
+            }
+         }
+      }
+   }
+}
 ```
 
 Теперь можно проверить как наш анализатор будет справляться со своими обязанностями.
@@ -394,6 +400,6 @@ GET /my_index/_analyze?analyzer=mark_and_model&text=e-class e-klasse
 }
 ```
 
-Мы получили по два токена по каждому слову. В данном конкретном случае на интересует то, что не смотря на разность в написании двух слов, токен `EKLS` для них одинаков - это означает, что если мы проиндексируем данное слово используя фонетический анализатор, то мы потом сможем его найти используя различные варианты написания, но которые звучат похоже.
+Мы получили по два токена на каждое слово. В данном конкретном случае нас интересует то, что не смотря на разность в написании двух слов, токен `EKLS` для них одинаков - это означает, что если мы проиндексируем данное слово используя фонетический анализатор, то мы потом сможем его найти используя различные варианты написания, но которые звучат похоже.
 
 Как бонус, ко всему этому можно докрутить [Unique Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/2.0/analysis-unique-tokenfilter.html) и [Shingle Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/2.0/analysis-shingle-tokenfilter.html) чтобы получить уникальные токены и токены-словосочетания для правильной индексации фраз `бумер x5`, например.
