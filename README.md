@@ -84,7 +84,7 @@ curl -XPOST localhost:9200/test -d '{
 
 #### Что такое релевантность?
 
-Как только у нас есть список подходящих документов, необходимо как-то их отсортировать. Не все документы будут содержать все слова (термины) и не все слова одинаково важны.
+Как только у нас появился список подходящих документов, необходимо как-то их отсортировать. Не все документы будут содержать все слова (термины) и не все слова одинаково важны.
 Вес (значение) слова зависит от [трех факторов](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html):
 
    1. Term Frequency (TF) - Как часто встречается слово (термин) в поле документа? Чем чаще - тем больший вес оно (слово) имеет. Поле содержащее пять упоминаний слова (термина) будет более релевантно, чем поле, которое содержит только одно такое слово
@@ -226,7 +226,7 @@ GET /us/tweet/12/_explain
 
 #### Тестирование анализаторов
 
-Все это очень хорошо, но как можно проверить как сработает анализатор с кокретным текстом? Для того, чтобы нам помочь в этом нелегком деле, в `Elastic Search` есть специальное API:
+Все это очень хорошо, но как можно проверить срабатывание анализатора на кокретном тексте? Для того, чтобы нам помочь в этом нелегком деле, в `Elastic Search` есть специальное API:
 
 ```bash
 GET /_analyze?analyzer=standard
@@ -288,3 +288,112 @@ PUT /my_index
     }
 }
 ```
+
+Анализаторы можно создавать на основе стандартных фильтров и токенайзеров или описывать свои собственные. Их список можно посмотреть по [ссылке](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html).
+
+Рассмотрим как создать анализатор для марок и моделей автомобилей. Основные требования к нему - учитывать безграмотность пользователя и разные слэнговые варианты названий.
+
+Для этого нам понадобится [Whitespace Tokenizer](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-whitespace-tokenizer.html), [Phonetic Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-phonetic-tokenfilter.html) и [Synonym Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html).
+
+```bash
+PUT /my_index
+{
+    "settings": {
+        "analysis": {
+            "filter": {
+                "synonym": {
+                    "type":       "synonym",
+                    "synonyms": [
+                         "беха, бумер => bmw",
+                         "mercedes => mercedes-benz"
+                    ]
+                },
+                "metaphone" : {
+                    "type" : "phonetic",
+                    "encoder" : "metaphone",
+                    "replace" : false
+                }
+            },
+            "analyzer": {
+                "mark_and_model": {
+                    "type":         "custom",
+                    "tokenizer":    "whitespace",
+                    "filter":       ["synonym", "metaphone" ]
+            }}
+}}}
+```
+
+Теперь можно проверить как наш анализатор будет справляться со своими обязанностями.
+
+Анализ слова `бумер`:
+
+```bash
+GET /my_index/_analyze?analyzer=mark_and_model&text=%D0%B1%D1%83%D0%BC%D0%B5%D1%80
+```
+
+```javascript
+{
+   "tokens": [
+      {
+         "token": "BM",
+         "start_offset": 0,
+         "end_offset": 5,
+         "type": "SYNONYM",
+         "position": 1
+      },
+      {
+         "token": "bmw",
+         "start_offset": 0,
+         "end_offset": 5,
+         "type": "SYNONYM",
+         "position": 1
+      }
+   ]
+}
+```
+
+Как видим, анализатор сгенерировал два токена - `BM` и `bmw`.
+
+Анализ слов `e-class e-klasse`:
+```bash
+GET /my_index/_analyze?analyzer=mark_and_model&text=e-class e-klasse
+```
+
+```javascript
+{
+   "tokens": [
+      {
+         "token": "EKLS",
+         "start_offset": 0,
+         "end_offset": 7,
+         "type": "word",
+         "position": 1
+      },
+      {
+         "token": "e-class",
+         "start_offset": 0,
+         "end_offset": 7,
+         "type": "word",
+         "position": 1
+      },
+      {
+         "token": "EKLS",
+         "start_offset": 8,
+         "end_offset": 16,
+         "type": "word",
+         "position": 2
+      },
+      {
+         "token": "e-klasse",
+         "start_offset": 8,
+         "end_offset": 16,
+         "type": "word",
+         "position": 2
+      }
+   ]
+}
+```
+
+Мы получили по два токена по каждому слову. В данном конкретном случае на интересует то, что не смотря на разность в написании двух слов, токен `EKLS` для них одинаков - это означает, что если мы проиндексируем данное слово используя фонетический анализатор, то мы потом сможем его найти используя различные варианты написания, но которые звучат похоже.
+
+Как бонус, ко всему этому можно докрутить [Unique Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/2.0/analysis-unique-tokenfilter.html) и [Shingle Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/2.0/analysis-shingle-tokenfilter.html) чтобы получить уникальные токены и токены-словосочетания для правильной индексации фраз `бумер x5`, например.
