@@ -295,7 +295,7 @@ PUT /my_index
 
 Для этого нам понадобится [Whitespace Tokenizer](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-whitespace-tokenizer.html), [Phonetic Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-phonetic-tokenfilter.html) и [Synonym Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html).
 
-```bash
+```javascript
 PUT /my_index
 {
    "settings": {
